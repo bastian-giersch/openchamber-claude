@@ -1,0 +1,39 @@
+name: Bug Report
+description: Report a bug in OpenChamber
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Go to...
+        2. Click on...
+        3. See error...
+  - type: input
+    id: version
+    attributes:
+      label: OpenChamber version
+      placeholder: v0.4.0
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider mode
+      options:
+        - Real (Claude Code data)
+        - Mock (sample data)
+        - Auto-detected
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Console errors, network errors, etc.
+      render: shell
