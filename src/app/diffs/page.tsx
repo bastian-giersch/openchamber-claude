@@ -2,18 +2,7 @@ import type { FileDiff } from "@/lib/types"
 import { DiffCard } from "@/components/diffs/DiffViewer"
 import { DiffFilters } from "@/components/diffs/DiffFilters"
 import { ExportDiffsButton } from "@/components/diffs/ExportDiffsButton"
-
-async function getDiffs(searchParams: { sessionId?: string; status?: string }): Promise<FileDiff[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  const params = new URLSearchParams()
-  if (searchParams.sessionId) params.set("sessionId", searchParams.sessionId)
-  try {
-    const res = await fetch(`${baseUrl}/api/diffs?${params}`, { cache: "no-store" })
-    return res.json()
-  } catch {
-    return []
-  }
-}
+import { getProvider } from "@/lib/providers"
 
 function groupByFile(diffs: FileDiff[]): Map<string, FileDiff[]> {
   const map = new Map<string, FileDiff[]>()
@@ -34,7 +23,8 @@ export default async function DiffsPage({
   searchParams: Promise<{ sessionId?: string; status?: string }>
 }) {
   const params = await searchParams
-  const diffs = await getDiffs(params)
+  const provider = getProvider()
+  const diffs = await provider.getDiffs()
 
   const pending = diffs.filter((d) => d.reviewStatus === "pending")
   const approved = diffs.filter((d) => d.reviewStatus === "approved")
@@ -75,7 +65,6 @@ export default async function DiffsPage({
 
       {/* Grouped diffs */}
       {params.sessionId ? (
-        // Flat list when filtering by session
         <div className="space-y-3">
           {filteredDiffs.map((d) => (
             <DiffCard key={d.id} diff={d} />
@@ -85,7 +74,6 @@ export default async function DiffsPage({
           )}
         </div>
       ) : (
-        // Grouped by directory
         <div className="space-y-6">
           {[...grouped.entries()].map(([dir, dirDiffs]) => (
             <section key={dir}>

@@ -1,18 +1,8 @@
 import type { Session, SessionEvent, ToolCall, PermissionRequest } from "@/lib/types"
 import { StatusBadge } from "@/components/ui/Badge"
 import { ExportSessionButton } from "@/components/sessions/ExportButton"
+import { getProvider } from "@/lib/providers"
 import Link from "next/link"
-
-async function getSessionData(id: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  try {
-    const res = await fetch(`${baseUrl}/api/sessions/${id}`, { cache: "no-store" })
-    if (!res.ok) return null
-    return res.json()
-  } catch {
-    return null
-  }
-}
 
 function formatTime(dateStr: string): string {
   return new Date(dateStr).toLocaleTimeString("en-US", {
@@ -77,9 +67,16 @@ function ToolCallRow({ tool }: { tool: ToolCall }) {
 
 export default async function SessionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const data = await getSessionData(id)
+  const provider = getProvider()
 
-  if (!data) {
+  const [session, events, toolCalls, permissions] = await Promise.all([
+    provider.getSession(id),
+    provider.getSessionEvents(id),
+    provider.getSessionToolCalls(id),
+    provider.getPendingPermissions(id),
+  ])
+
+  if (!session) {
     return (
       <div className="text-center py-20">
         <p className="text-[var(--text-secondary)]">Session not found</p>
@@ -90,16 +87,9 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
     )
   }
 
-  const { session, events, toolCalls, permissions }: {
-    session: Session
-    events: SessionEvent[]
-    toolCalls: ToolCall[]
-    permissions: PermissionRequest[]
-  } = data
-
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header - mobile stacked, desktop side-by-side */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -145,7 +135,7 @@ export default async function SessionDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      {/* Main content - stack on mobile, grid on desktop */}
+      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Event Log */}
         <div className="lg:col-span-2">

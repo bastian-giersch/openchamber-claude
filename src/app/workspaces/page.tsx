@@ -1,30 +1,22 @@
 import type { Workspace } from "@/lib/types"
 import Link from "next/link"
-
-async function getWorkspaces(): Promise<Workspace[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  try {
-    const res = await fetch(`${baseUrl}/api/workspaces`, { cache: "no-store" })
-    return res.json()
-  } catch {
-    return []
-  }
-}
+import { getProvider } from "@/lib/providers"
 
 export default async function WorkspacesPage() {
-  const workspaces = await getWorkspaces()
+  const provider = getProvider()
+  const workspaces = await provider.getWorkspaces()
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-[var(--text-primary)]">Workspaces</h1>
         <p className="text-sm text-[var(--text-secondary)] mt-1">
-          Projects and their sessions
+          {workspaces.length} projects discovered
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {workspaces.map((ws) => (
+        {workspaces.map((ws: Workspace) => (
           <div
             key={ws.id}
             className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-5 hover:border-[var(--accent)]/40 transition-colors"
@@ -77,6 +69,12 @@ export default async function WorkspacesPage() {
           </div>
         ))}
       </div>
+
+      {workspaces.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-[var(--text-secondary)]">No workspaces found</p>
+        </div>
+      )}
     </div>
   )
 }

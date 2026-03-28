@@ -1,18 +1,10 @@
 import type { Session } from "@/lib/types"
 import { SessionTable } from "@/components/sessions/SessionTable"
-
-async function getSessions(): Promise<Session[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  try {
-    const res = await fetch(`${baseUrl}/api/sessions`, { cache: "no-store" })
-    return res.json()
-  } catch {
-    return []
-  }
-}
+import { getProvider } from "@/lib/providers"
 
 export default async function SessionsPage() {
-  const sessions = await getSessions()
+  const provider = getProvider()
+  const sessions = await provider.getSessions()
 
   const active = sessions.filter((s) => s.status === "active")
   const paused = sessions.filter((s) => s.status === "paused")

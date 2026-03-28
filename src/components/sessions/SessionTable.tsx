@@ -1,3 +1,5 @@
+"use client"
+
 import type { Session } from "@/lib/types"
 import { StatusBadge } from "@/components/ui/Badge"
 

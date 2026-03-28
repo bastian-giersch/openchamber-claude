@@ -1,23 +1,8 @@
 import type { Session, DashboardStats } from "@/lib/types"
 import { MetricCard } from "@/components/ui/MetricCard"
 import { DashboardClient } from "@/components/dashboard/DashboardClient"
+import { getProvider } from "@/lib/providers"
 import Link from "next/link"
-
-async function getData(): Promise<{ stats: DashboardStats; sessions: Session[] }> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-
-  try {
-    const [statsRes, sessionsRes] = await Promise.all([
-      fetch(`${baseUrl}/api/stats`, { cache: "no-store" }),
-      fetch(`${baseUrl}/api/sessions`, { cache: "no-store" }),
-    ])
-    const stats = await statsRes.json()
-    const sessions = await sessionsRes.json()
-    return { stats, sessions }
-  } catch {
-    return { stats: {} as DashboardStats, sessions: [] }
-  }
-}
 
 function relativeTime(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
@@ -31,7 +16,11 @@ function relativeTime(dateStr: string): string {
 }
 
 export default async function DashboardPage() {
-  const { stats, sessions } = await getData()
+  const provider = getProvider()
+  const [stats, sessions] = await Promise.all([
+    provider.getDashboardStats(),
+    provider.getSessions(),
+  ])
 
   const activeSessions = sessions.filter((s: Session) => s.status === "active")
   const recentSessions = sessions.slice(0, 8)
